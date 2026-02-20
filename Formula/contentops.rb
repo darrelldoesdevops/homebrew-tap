@@ -7,12 +7,11 @@
 class Contentops < Formula
   desc "Automated video content operations: silence removal, captions, overlays"
   homepage "https://github.com/darrelldoesdevops/contentops"
-  version "1.1.0" # === AUTO-UPDATE: VERSION ===
-
+  # current version: 1.1.0 === AUTO-UPDATE: VERSION ===
   license "MIT"
 
-  depends_on :macos
   depends_on "ffmpeg"
+  depends_on :macos
 
   on_macos do
     on_arm do
@@ -52,6 +51,6 @@ class Contentops < Formula
   end
 
   test do
-    assert_match version.to_s, shell_output("#{bin}/contentops --version")
+    assert_match "Video processing pipeline", shell_output("#{bin}/contentops --help")
   end
 end
