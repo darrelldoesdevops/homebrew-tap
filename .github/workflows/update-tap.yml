@@ -1,0 +1,62 @@
+name: Update Formula
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version (without v prefix, e.g. 1.2.0)'
+        required: true
+        type: string
+
+jobs:
+  update-formula:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch SHA256 from release
+        id: sha256
+        run: |
+          ARM_SHA=$(gh api repos/darrelldoesdevops/contentops/releases/tags/v${{ inputs.version }} \
+            --jq '.assets[] | select(.name == "contentops-aarch64-apple-darwin") | .digest | ltrimstr("sha256:")')
+          INTEL_SHA=$(gh api repos/darrelldoesdevops/contentops/releases/tags/v${{ inputs.version }} \
+            --jq '.assets[] | select(.name == "contentops-x86_64-apple-darwin") | .digest | ltrimstr("sha256:")')
+          echo "arm_sha=$ARM_SHA" >> "$GITHUB_OUTPUT"
+          echo "intel_sha=$INTEL_SHA" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Patch formula
+        run: |
+          VERSION="${{ inputs.version }}"
+          ARM_SHA="${{ steps.sha256.outputs.arm_sha }}"
+          INTEL_SHA="${{ steps.sha256.outputs.intel_sha }}"
+          F="Formula/contentops.rb"
+
+          sed -i "s|\(# current version: \)[^ ]* \(=== AUTO-UPDATE: VERSION ===\)|\1${VERSION} \2|" "$F"
+          sed -i "s|\(url \"https://github\.com/darrelldoesdevops/contentops/releases/download/v\)[^/]*\(/contentops-aarch64-apple-darwin\" # === AUTO-UPDATE: ARM-URL ===\)|\1${VERSION}\2|" "$F"
+          sed -i "s|\(sha256 \"\)[^\"]*\(\" # === AUTO-UPDATE: ARM-SHA256 ===\)|\1${ARM_SHA}\2|" "$F"
+          sed -i "s|\(url \"https://github\.com/darrelldoesdevops/contentops/releases/download/v\)[^/]*\(/contentops-x86_64-apple-darwin\" # === AUTO-UPDATE: INTEL-URL ===\)|\1${VERSION}\2|" "$F"
+          sed -i "s|\(sha256 \"\)[^\"]*\(\" # === AUTO-UPDATE: INTEL-SHA256 ===\)|\1${INTEL_SHA}\2|" "$F"
+
+      - name: Verify patches
+        run: |
+          VERSION="${{ inputs.version }}"
+          F="Formula/contentops.rb"
+          grep "AUTO-UPDATE: VERSION" "$F" | grep -q "$VERSION" || { echo "VERSION sentinel not patched"; exit 1; }
+          grep "AUTO-UPDATE: ARM-URL" "$F" | grep -q "$VERSION" || { echo "ARM-URL sentinel not patched"; exit 1; }
+          grep "AUTO-UPDATE: INTEL-URL" "$F" | grep -q "$VERSION" || { echo "INTEL-URL sentinel not patched"; exit 1; }
+          grep "AUTO-UPDATE: ARM-SHA256" "$F" | grep -qE '[0-9a-f]{64}' || { echo "ARM-SHA256 not patched"; exit 1; }
+          grep "AUTO-UPDATE: INTEL-SHA256" "$F" | grep -qE '[0-9a-f]{64}' || { echo "INTEL-SHA256 not patched"; exit 1; }
+          echo "All 5 sentinels verified"
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Formula/contentops.rb
+          git diff --cached --quiet && echo "No changes to commit" && exit 0
+          git commit -m "chore: update contentops formula to v${{ inputs.version }}"
+          git push
