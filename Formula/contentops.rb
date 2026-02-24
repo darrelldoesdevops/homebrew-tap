@@ -7,7 +7,7 @@
 class Contentops < Formula
   desc "Automated video content operations: silence removal, captions, overlays"
   homepage "https://github.com/darrelldoesdevops/contentops"
-  # current version: 1.3.3 === AUTO-UPDATE: VERSION ===
+  # current version: 1.3.4 === AUTO-UPDATE: VERSION ===
   license "MIT"
 
   depends_on "ffmpeg"
@@ -15,13 +15,13 @@ class Contentops < Formula
 
   on_macos do
     on_arm do
-      url "https://github.com/darrelldoesdevops/contentops/releases/download/v1.3.3/contentops-aarch64-apple-darwin" # === AUTO-UPDATE: ARM-URL ===
-      sha256 "976bb7b81ddab6dee3e127861de59ff7e7edff8082310bced1eb8401d77cd636" # === AUTO-UPDATE: ARM-SHA256 ===
+      url "https://github.com/darrelldoesdevops/contentops/releases/download/v1.3.4/contentops-aarch64-apple-darwin" # === AUTO-UPDATE: ARM-URL ===
+      sha256 "e44d172543e582396865ee65a09e7f72f354f74ef2dc5a029e88eb28d7e13448" # === AUTO-UPDATE: ARM-SHA256 ===
     end
 
     on_intel do
-      url "https://github.com/darrelldoesdevops/contentops/releases/download/v1.3.3/contentops-x86_64-apple-darwin" # === AUTO-UPDATE: INTEL-URL ===
-      sha256 "a17958753c17fe8956008f32ec82fe1a2ebfb22e9b978804182f6515044deffb" # === AUTO-UPDATE: INTEL-SHA256 ===
+      url "https://github.com/darrelldoesdevops/contentops/releases/download/v1.3.4/contentops-x86_64-apple-darwin" # === AUTO-UPDATE: INTEL-URL ===
+      sha256 "021f32bc66b6b04c86d50450b745fcef5f6c6c99e8f2178bf1191e5b8c410ad4" # === AUTO-UPDATE: INTEL-SHA256 ===
     end
   end
 
